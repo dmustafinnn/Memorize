@@ -9,14 +9,55 @@ import SwiftUI
 
 struct ContentView: View {
     let emojis = ["👽","🎃","🫁","🧟"]
+    @State var cardCount: Int = 4
+    
     var body: some View {
+        ScrollView {
+            cards
+        }
+        Spacer()
+        CardCountAdjusters
+    }
+    
+    var CardCountAdjusters: some View {
         HStack {
-            ForEach(emojis.indices, id: \.self) { index in
-                CardView(content: emojis[index])
+            cardAdder
+            Spacer()
+            cardRemover
+        }
+        .imageScale(.large)
+        .font(.largeTitle)
+        .padding()
+    }
+    
+    var cards: some View {
+        HStack {
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 120))]) {
+                ForEach(0..<cardCount, id: \.self) { index in
+                    CardView(content: emojis[index])
+                        .aspectRatio(2/3, contentMode: /*@START_MENU_TOKEN@*/.fill/*@END_MENU_TOKEN@*/)
+                }
             }
         }
         .foregroundColor(.orange)
         .padding()
+    }
+    
+    func cardCountAdjuster(by offset: Int, symbol: String) -> some View {
+        Button(action: {
+            cardCount += offset
+        }, label: {
+            Image(systemName: symbol)
+        })
+        .disabled(cardCount + offset < 1 || cardCount + offset > emojis.count)
+    }
+    
+    var cardAdder: some View {
+        cardCountAdjuster(by: 1, symbol: "rectangle.stack.badge.plus.fill")
+    }
+    
+    var cardRemover: some View {
+        cardCountAdjuster(by: -1, symbol: "rectangle.stack.fill.badge.minus")
     }
 }
 
@@ -25,15 +66,15 @@ struct CardView: View {
     @State var isFaceUp: Bool = false
     
     var body: some View {
-        let base: RoundedRectangle = RoundedRectangle(cornerRadius: 12)
         ZStack {
-            if isFaceUp {
+            let base: RoundedRectangle = RoundedRectangle(cornerRadius: 12)
+            Group {
                 base.foregroundColor(.white)
                 base.strokeBorder(lineWidth: 3)
                 Text(content).font(.largeTitle)
-            } else {
-                base.fill()
             }
+            .opacity(isFaceUp ? 1 : 0)
+            base.fill().opacity(isFaceUp ? 0 : 1)
         }
         .onTapGesture {
             isFaceUp.toggle()
